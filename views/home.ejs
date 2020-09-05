@@ -7,7 +7,11 @@
 <% posts.forEach(element => { %>
     <h1> <%= element.title %> </h1>
     <p><%= element.body.substring(0, 100) + "..." %> 
-    <a href= "posts/<%= element.title %>"> Read More</a>
+    <a href= "posts/<%= element._id %>"> Read More</a>
     </p>
+    
+    <form action="/delete" method="post">
+        <button type="submit" value= <%= element._id %> name="deleteID" class="btn btn-primary">Delete Blog</button>
+    </form>
 <% }); %>
 

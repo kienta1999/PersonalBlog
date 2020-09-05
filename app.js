@@ -17,10 +17,23 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-const posts = [];
+mongoose.connect("mongodb://localhost:27017/blogDB",  { useNewUrlParser: true,  useUnifiedTopology: true});
+const blogSchema = {
+  title: String,
+  body: String
+}
+const Blog = mongoose.model("Blog", blogSchema);
+// const posts = [];
 
 app.get('/', (req, res) => {
-  res.render("home", {homeStartingContent: homeStartingContent, posts: posts});
+  Blog.find({}, (err, results) => {
+      if(err){
+        console.log(err);
+      }
+      else{
+        res.render("home", {homeStartingContent: homeStartingContent, posts: results});
+      }
+  });
 });
 
 app.get('/about', (req, res) => {
@@ -34,29 +47,40 @@ app.get('/compose', (req, res) => {
   res.render("compose");
 });
 
-app.get('/posts/:postName', (req, res) => {
-  const requestedTitle = _.lowerCase(req.params.postName);
-  const foundPost = posts.find(x => _.lowerCase(x.title) == requestedTitle);
-  if(foundPost){
-    console.log("Match found");
-    res.render("post", {foundPost: foundPost});
-  }
-  else{
-    console.log("Post not found");
-    res.render("post", {foundPost: foundPost});
-  }
-  
+app.get('/posts/:postID', (req, res) => {
+  const requestedpostID = req.params.postID;
+  Blog.findOne({_id: requestedpostID}, (err, result) => {
+    if(err)
+      console.log(err);
+    else{
+      if(result){
+        res.render("post", {foundPost: result});
+      }
+      else{
+        res.redirect("/");
+      }
+    }
+  })
 });
 
 app.post("/compose", (req, res) => {
- const post = {
+  const blog = new Blog({
     title: _.capitalize(req.body.postTitle),
     body: req.body.postBody
-  };
-  posts.push(post);
+  });
+  blog.save();
+  
   res.redirect("/");
 });
-
+app.post("/delete", (req, res) => {
+  const blogID = req.body.deleteID;
+  Blog.findByIdAndRemove(blogID, function(err){
+    if(err)
+      console.log(err);
+    else
+      res.redirect("/");
+  });
+})
 
 
 
